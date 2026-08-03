@@ -1,5 +1,5 @@
 #!/bin/sh
-# HTB PrivEsc checks + GTFOBins hints - restricted shell friendly
+# Simple PrivEsc checks + GTFOBins hints - restricted shell friendly
 
 echo "========== 1. sudo -l =========="
 sudo -l 2>/dev/null || echo "[-] sudo not available or permission denied"
