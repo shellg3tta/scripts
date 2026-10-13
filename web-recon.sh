@@ -2,6 +2,7 @@
 # ============================================================
 # Efficient Web Recon Playbook for *.domain scope
 # Usage: ./web-recon.sh pentest.test
+# requires: subfinder, assetfinder, httpx, katana, gau, waybackurls, unfurl, dirsearch, jq
 # ============================================================
 
 set -euo pipefail
@@ -16,7 +17,6 @@ fi
 
 # Wordlists (adjust paths if needed)
 DIR_WORDLIST="/usr/share/seclists/Discovery/Web-Content/raft-medium-directories.txt"
-COMMON_WORDLIST="/usr/share/seclists/Discovery/Web-Content/common.txt"
 # ------------------------------------------------
 
 # Create directory structure
@@ -28,12 +28,11 @@ echo "[*] Output directory: $(pwd)"
 echo
 
 # ============================================================
-# PHASE 1: Subdomain Enumeration (Passive)
+# PHASE 1: Subdomain Enumeration (Passive - Fast)
 # ============================================================
 echo "[+] Phase 1: Subdomain Enumeration"
 
 subfinder -d "$TARGET" -all -silent -o subs/subfinder.txt &
-amass enum -passive -d "$TARGET" -silent -o subs/amass.txt 2>/dev/null &
 assetfinder --subs-only "$TARGET" > subs/assetfinder.txt &
 curl -s "https://crt.sh/?q=%25.$TARGET&output=json" | jq -r '.[].name_value' 2>/dev/null | sed 's/\*\.//g' | sort -u > subs/crtsh.txt &
 
@@ -92,7 +91,7 @@ echo
 echo "[+] Phase 4: Directory Busting with dirsearch"
 echo "[*] Running on first 8 live hosts (edit script to change)"
 
-# Take top live hosts (you can edit this list later)
+# Take top live hosts
 head -8 live/live_urls.txt > live/priority_hosts.txt
 
 while read -r url; do
@@ -148,8 +147,8 @@ echo "  Dirsearch results:   dirs/"
 echo "  Interesting leads:   leads/"
 echo
 echo "Next steps ideas:"
-echo "  • Feed live/live_urls.txt into Nuclei"
-echo "  • Run Arjun on crawl/urls_with_params.txt"
+echo "  • Feed live/live_urls.txt into Nuclei to scan for vulns"
+echo "  • Run Arjun on crawl/urls_with_params.txt to find params"
 echo "  • ffuf interesting endpoints with custom wordlists"
 echo "  • Manual review of leads/interesting_endpoints.txt"
 echo
